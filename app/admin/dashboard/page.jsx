@@ -20,6 +20,8 @@ export default function AdminDashboard() {
   const [selectedSizes, setSelectedSizes] = useState([]);
   const [imageDescription, setImageDescription] = useState("");
   const [imagePrice, setImagePrice] = useState("");
+  const [imageDiscount, setImageDiscount] = useState("");
+  const [discountError, setDiscountError] = useState("");
   const [selectedBucket, setSelectedBucket] = useState("products");
 
   // Categories management state
@@ -67,6 +69,13 @@ export default function AdminDashboard() {
     fetchUploadedImages();
     fetchCategories();
   }, [selectedBucket]);
+
+  // Clear discount error when category is not deals
+  useEffect(() => {
+    if (imageCategory !== 'deals' && discountError) {
+      setDiscountError("");
+    }
+  }, [imageCategory, discountError]);
 
   // Add new category
   const addCategory = async () => {
@@ -470,6 +479,14 @@ export default function AdminDashboard() {
       return;
     }
 
+    // Require discount when category is deals
+    if (imageCategory === 'deals' && (!imageDiscount || imageDiscount.toString().trim() === "")) {
+      setDiscountError('Discount is required for deals category');
+      return;
+    } else {
+      setDiscountError("");
+    }
+
     setIsUploading(true);
     setUploadProgress(0);
 
@@ -503,6 +520,7 @@ export default function AdminDashboard() {
         description: imageDescription,
         size: selectedSizes.join(','), // Convert array to comma-separated string
         price: imagePrice ? parseFloat(imagePrice.replace(/[^0-9.]/g, '')) : null,
+        discount: imageDiscount ? parseFloat(imageDiscount) : null,
         category: imageCategory,
         image_path: urlData.publicUrl
       };
@@ -530,6 +548,7 @@ export default function AdminDashboard() {
         imageSizes: selectedSizes,
         description: imageDescription,
         price: imagePrice,
+        discount: imageDiscount,
         bucket: selectedBucket
       };
 
@@ -542,6 +561,7 @@ export default function AdminDashboard() {
       setSelectedSizes([]);
       setImageDescription("");
       setImagePrice("");
+      setImageDiscount("");
       setUploadProgress(100);
 
       setTimeout(() => {
@@ -910,6 +930,22 @@ export default function AdminDashboard() {
                             className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                             placeholder="e.g., 29.99, 0.00"
                           />
+                          <div className="mt-4">
+                            <label className="block text-sm font-medium text-gray-700">Discount (%)</label>
+                            <input
+                              type="number"
+                              value={imageDiscount}
+                              onChange={(e) => setImageDiscount(e.target.value)}
+                              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                              placeholder="e.g., 10"
+                              min="0"
+                              max="100"
+                              step="0.01"
+                            />
+                            {discountError && (
+                              <p className="mt-1 text-xs text-red-600">{discountError}</p>
+                            )}
+                          </div>
                         </div>
                       </div>
 
